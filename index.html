@@ -2,81 +2,83 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ITパスポート 攻略システム V3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITパス攻略 V4 (Mobile Optimized)</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --bg: #f0f2f5; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* 達成度バー */
+        .status-card { background: white; width: 100%; max-width: 400px; padding: 12px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; box-sizing: border-box; }
+        .progress-container { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; }
+        #progress-bar { background: var(--success); width: 0%; height: 100%; transition: 0.5s; }
+
+        /* カードデザイン */
+        #display {
+            width: 100%; max-width: 400px; height: 220px;
+            background: white; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; margin-bottom: 20px; border: none; text-align: center; box-sizing: border-box;
+        }
+
+        /* 巨大ボタンエリア */
+        .btn-group { width: 100%; max-width: 400px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .huge-btn { height: 80px; font-size: 18px; font-weight: bold; border: none; border-radius: 15px; color: white; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.1s; }
+        .huge-btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-ok { background: var(--success); }
+        .btn-ng { background: var(--danger); }
+        .btn-next { background: var(--primary); grid-column: span 2; height: 60px; margin-top: 10px; }
+
+        /* 設定エリア */
+        .settings { font-size: 12px; color: #666; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+        input[type="number"] { width: 40px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
+    </style>
 </head>
-<body style="text-align: center; font-family: sans-serif; padding: 20px; background-color: #f0f2f5; line-height: 1.6;">
+<body>
 
-    <h1>ITパス試験：攻略システム</h1>
-
-    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; margin-bottom: 20px; width: 360px;">
-        <h4 style="margin:0 0- 10px 0;">全体の学習達成度</h4>
-        <div style="background: #eee; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 5px;">
-            <div id="progress-bar" style="background: #28a745; width: 0%; height: 100%; transition: 0.5s;"></div>
+    <div class="status-card">
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px;">
+            <span id="progress-text">覚えた: 0 / 0</span>
+            <span>セット内: <b id="solved-num">1</b> / <b id="limit-display">5</b> 問目</span>
         </div>
-        <small id="progress-text">覚えた単語: 0 / 0</small>
     </div>
 
-    <br>
+    <div id="display" onclick="flipCard()">
+        <div id="main-text" style="font-size: 28px; font-weight: bold; padding: 0 15px;">タップして開始</div>
+        <div id="sub-text" style="font-size: 14px; color: #6c757d; margin-top: 15px; min-height: 1.2em;"></div>
+    </div>
 
-    <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-        <label style="cursor: pointer; background: #e9ecef; padding: 8px 15px; border-radius: 25px; font-size: 13px; border: 1px solid #ced4da;">
-            <input type="checkbox" id="reverse-mode" onchange="resetCard()"> <b>和訳から出題</b>
+    <div id="controls" style="display: none; width: 100%; max-width: 400px;">
+        <div id="judge-btns" class="btn-group">
+            <button class="huge-btn btn-ok" onclick="judge(true)">〇 覚えた</button>
+            <button class="huge-btn btn-ng" onclick="judge(false)">× 苦手</button>
+        </div>
+        <button id="next-btn" class="huge-btn btn-next" style="display:none;" onclick="next()">次の問題へ ＞</button>
+    </div>
+
+    <div class="settings">
+        <label><input type="checkbox" id="reverse-mode" onchange="resetCard()"> 和訳から</label>
+        <label><input type="checkbox" id="weak-mode" onchange="resetCard()"> 苦手克服🔥</label>
+        <label>1セット: <input type="number" id="limit-num" value="5" min="1"></label>
+    </div>
+
+    <div style="margin-top: 20px; width: 100%; max-width: 400px; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
+        <button onclick="exportData()" style="padding: 10px; font-size: 11px;">📥 バックアップ</button>
+        <label style="padding: 10px; font-size: 11px; background: #eee; border-radius: 5px; margin-left: 5px;">
+            📤 復元 <input type="file" onchange="importData(event)" style="display:none;">
         </label>
-        <label style="cursor: pointer; background: #fff3cd; padding: 8px 15px; border-radius: 25px; font-size: 13px; border: 1px solid #ffeeba;">
-            <input type="checkbox" id="weak-mode" onchange="resetCard()"> <b>苦手克服🔥</b>
-        </label>
-        <label style="font-size: 13px; background: #fff; padding: 8px 15px; border-radius: 25px; border: 1px solid #ccc;">
-            1セット: <input type="number" id="limit-num" value="5" min="1" style="width: 35px; border: none; text-align: center; font-weight: bold;"> 問
-        </label>
-    </div>
-
-    <div id="display" onclick="flipCard()" style="
-        border: 2px solid #333; width: 360px; height: 180px; 
-        margin: 0 auto 20px; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; cursor: pointer; 
-        border-radius: 20px; background-color: white; box-shadow: 0 8px 15px rgba(0,0,0,0.15); transition: 0.2s;">
-        
-        <div id="main-text" style="font-size: 24px; font-weight: bold; padding: 0 20px;">タップして開始</div>
-        <div id="sub-text" style="font-size: 13px; color: #6c757d; margin-top: 10px; height: 1.2em;"></div>
-    </div>
-
-    <div id="controls" style="display: none;">
-        <div id="judge-btns">
-            <button onclick="judge(true)" style="padding: 10px 25px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: bold;">〇 覚えた！</button>
-            <button onclick="judge(false)" style="padding: 10px 25px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">× まだかも...</button>
+        <br><br>
+        <div style="display: flex; gap: 5px; justify-content: center;">
+            <input type="text" id="new-q" placeholder="略称" style="width: 50px;">
+            <input type="text" id="new-a" placeholder="和訳" style="width: 100px;">
+            <input type="text" id="new-full" placeholder="Full" style="width: 100px;">
+            <button onclick="addCard()">＋</button>
         </div>
-        <button id="next-btn" onclick="next()" style="display:none; margin-top:15px; padding: 10px 45px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 0 #0056b3;">
-            次の問題へ
-        </button>
-        <div style="margin-top: 25px;">
-            <button onclick="deleteCurrentCard()" style="font-size: 11px; color: #999; background: none; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; padding: 3px 8px;">このカードを削除</button>
-        </div>
-    </div>
-
-    <p style="color: #666; font-size: 14px;">現在のセット: <span id="solved-num" style="font-weight: bold; color: #007bff;">0</span> / <span id="limit-display" style="font-weight: bold;">5</span> 問目</p>
-
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;">
-
-    <div style="background: #fff; padding: 20px; border-radius: 10px; display: inline-block; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <h3 style="margin-top:0; font-size: 16px;">カードの管理</h3>
-        <input type="text" id="new-q" placeholder="略称" style="width: 70px; padding: 5px;">
-        <input type="text" id="new-a" placeholder="和訳" style="width: 140px; padding: 5px;">
-        <input type="text" id="new-full" placeholder="フルスペル" style="width: 160px; padding: 5px;">
-        <button onclick="addCard()" style="padding: 5px 15px; cursor: pointer; background: #333; color: #fff; border: none; border-radius: 4px;">追加</button>
-        
-        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-            <button onclick="exportData()" style="font-size: 11px; background: #f8f9fa; border: 1px solid #ccc; cursor: pointer; padding: 5px 10px; border-radius: 3px;">📥 バックアップ保存</button>
-            <label style="font-size: 11px; background: #f8f9fa; border: 1px solid #ccc; cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-left: 5px;">
-                📤 復元(ファイル選択)
-                <input type="file" onchange="importData(event)" style="display:none;">
-            </label>
-            <br>
-            <button onclick="clearAllData()" style="margin-top: 15px; font-size: 10px; color: #dc3545; border: none; background: none; cursor: pointer; text-decoration: underline;">全データ初期化</button>
-        </div>
+        <button onclick="clearAllData()" style="margin-top: 20px; color: #999; background: none; border: none; font-size: 10px;">初期化</button>
     </div>
 
     <script>
-        // --- データ管理 ---
         let savedData = localStorage.getItem("myQuizData");
         let originalData = savedData ? JSON.parse(savedData) : [
             { q: "CSR", a: "企業の社会的責任", full: "Corporate Social Responsibility", correct: 0, miss: 0 },
@@ -89,24 +91,12 @@
         let solvedCount = 0;
         let isFront = true;
 
-        function saveData() {
-            localStorage.setItem("myQuizData", JSON.stringify(originalData));
-            updateProgress();
-        }
+        function saveData() { localStorage.setItem("myQuizData", JSON.stringify(originalData)); updateProgress(); }
 
-        // --- シャッフル & リセット ---
         function shuffle() {
             const isWeakMode = document.getElementById("weak-mode").checked;
-            let baseList = isWeakMode 
-                ? originalData.filter(item => (item.miss || 0) > 0) 
-                : [...originalData];
-            
-            if (isWeakMode && baseList.length === 0) {
-                alert("苦手な問題はまだありません！全件表示します。");
-                baseList = [...originalData];
-                document.getElementById("weak-mode").checked = false;
-            }
-
+            let baseList = isWeakMode ? originalData.filter(item => (item.miss || 0) > 0) : [...originalData];
+            if (isWeakMode && baseList.length === 0) { baseList = [...originalData]; document.getElementById("weak-mode").checked = false; }
             shuffleList = baseList;
             for (let i = shuffleList.length - 1; i > 0; i--) {
                 let r = Math.floor(Math.random() * (i + 1));
@@ -114,90 +104,50 @@
             }
         }
 
-        function resetCard() {
-            index = 0;
-            solvedCount = 0;
-            isFront = true;
-            shuffle();
-            render();
-        }
-
-        // --- 描画処理 ---
         function render() {
             const main = document.getElementById("main-text");
             const sub = document.getElementById("sub-text");
             const isReverse = document.getElementById("reverse-mode").checked;
             const limit = parseInt(document.getElementById("limit-num").value) || 5;
-
             if (shuffleList.length === 0) return;
             const item = shuffleList[index];
-
-            let fullText = "";
-            if (!isFront) { fullText = item.full || ""; }
-
-            if (!isReverse) {
-                main.innerText = isFront ? item.q : item.a;
-            } else {
-                main.innerText = isFront ? item.a : item.q;
-            }
-            sub.innerText = fullText;
-
+            if (!isReverse) { main.innerText = isFront ? item.q : item.a; } else { main.innerText = isFront ? item.a : item.q; }
+            sub.innerText = !isFront ? (item.full || "") : "";
             document.getElementById("display").style.backgroundColor = isFront ? "white" : "#fff9c4";
             document.getElementById("solved-num").innerText = solvedCount + 1;
             document.getElementById("limit-display").innerText = limit;
             updateProgress();
         }
 
-        // --- 判定ロジック ---
         function judge(isCorrect) {
             const item = shuffleList[index];
-            if (!item.correct) item.correct = 0;
-            if (!item.miss) item.miss = 0;
-
-            if (isCorrect) { item.correct++; } else { item.miss++; }
-            
+            if (isCorrect) { item.correct = (item.correct || 0) + 1; } else { item.miss = (item.miss || 0) + 1; }
             saveData();
             document.getElementById("judge-btns").style.display = "none";
-            document.getElementById("next-btn").style.display = "inline-block";
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function flipCard() {
+            isFront = !isFront; render();
+            if (!isFront) { document.getElementById("controls").style.display = "block"; document.getElementById("judge-btns").style.display = "grid"; document.getElementById("next-btn").style.display = "none"; }
+        }
+
+        function next() {
+            index++; solvedCount++;
+            const limit = parseInt(document.getElementById("limit-num").value) || 5;
+            if (index >= shuffleList.length || solvedCount >= limit) { alert("1セット終了！"); index = 0; solvedCount = 0; shuffle(); }
+            isFront = true; render();
+            document.getElementById("controls").style.display = "none";
         }
 
         function updateProgress() {
             const mastered = originalData.filter(item => (item.correct || 0) > 0).length;
             const total = originalData.length;
             const percent = total > 0 ? (mastered / total) * 100 : 0;
-            
             document.getElementById("progress-bar").style.width = percent + "%";
-            document.getElementById("progress-text").innerText = `覚えた単語: ${mastered} / ${total}`;
+            document.getElementById("progress-text").innerText = `覚えた: ${mastered} / ${total}`;
         }
 
-        // --- 操作系 ---
-        function flipCard() {
-            isFront = !isFront;
-            render();
-            if (!isFront) {
-                document.getElementById("controls").style.display = "block";
-                document.getElementById("judge-btns").style.display = "block";
-                document.getElementById("next-btn").style.display = "none";
-            }
-        }
-
-        function next() {
-            index++;
-            solvedCount++;
-            const limit = parseInt(document.getElementById("limit-num").value) || 5;
-
-            if (index >= shuffleList.length || solvedCount >= limit) {
-                alert(`1セット（${solvedCount}問）終了です！`);
-                index = 0;
-                solvedCount = 0; 
-                shuffle();
-            }
-            isFront = true;
-            render();
-            document.getElementById("controls").style.display = "none";
-        }
-
-        // --- データ管理（追加・削除・バックアップ） ---
         function addCard() {
             const q = document.getElementById("new-q").value;
             const a = document.getElementById("new-a").value;
@@ -205,59 +155,23 @@
             if (!q || !a) return;
             originalData.push({ q: q, a: a, full: f, correct: 0, miss: 0 });
             saveData();
-            document.getElementById("new-q").value = "";
-            document.getElementById("new-a").value = "";
-            document.getElementById("new-full").value = "";
+            document.getElementById("new-q").value = ""; document.getElementById("new-a").value = ""; document.getElementById("new-full").value = "";
             resetCard();
-            alert("追加しました");
         }
 
-        function deleteCurrentCard() {
-            if (confirm("このカードを完全に削除しますか？")) {
-                const item = shuffleList[index];
-                originalData = originalData.filter(i => i !== item);
-                saveData();
-                location.reload();
-            }
-        }
-
+        function resetCard() { index = 0; solvedCount = 0; isFront = true; shuffle(); render(); }
         function exportData() {
-            const dataStr = JSON.stringify(originalData, null, 2);
-            const blob = new Blob([dataStr], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "it-passport-backup.json";
-            a.click();
-            URL.revokeObjectURL(url);
+            const blob = new Blob([JSON.stringify(originalData, null, 2)], {type: "application/json"});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "it-passport-backup.json"; a.click();
         }
-
         function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (confirm("データを上書き復元しますか？")) {
-                        originalData = imported;
-                        saveData();
-                        location.reload();
-                    }
-                } catch (err) { alert("形式が正しくありません"); }
-            };
-            reader.readAsText(file);
+            reader.onload = (e) => { originalData = JSON.parse(e.target.result); saveData(); location.reload(); };
+            reader.readAsText(event.target.files[0]);
         }
+        function clearAllData() { if (confirm("初期化？")) { localStorage.removeItem("myQuizData"); location.reload(); } }
 
-        function clearAllData() {
-            if (confirm("初期化しますか？")) {
-                localStorage.removeItem("myQuizData");
-                location.reload();
-            }
-        }
-
-        shuffle();
-        render();
+        shuffle(); render();
     </script>
 </body>
 </html>
